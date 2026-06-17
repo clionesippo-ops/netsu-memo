@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>こどもの熱メモ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F4EE; --surface:#FFFFFF; --ink:#36302B; --ink-soft:#8A8073;
+    --green:#6FA988; --green-deep:#4F8A6A; --green-soft:#E7F1EA;
+    --amber:#E29A55; --amber-soft:#FBEBD4; --amber-deep:#B4751F;
+    --line:#ECE3D6; --line-soft:#F2EBE0; --shadow:0 12px 34px -16px rgba(79,138,106,.4);
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100dvh;display:flex;justify-content:center;padding:16px 14px 120px}
+  .app{width:100%;max-width:460px}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 12px;gap:8px}
+  .logo{font-family:"Zen Maru Gothic";font-weight:900;font-size:18px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+  .logo .leaf{width:24px;height:24px;border-radius:8px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:14px}
+  .name-wrap{display:flex;align-items:center;gap:6px}
+  .namefield{border:1.5px solid var(--line);background:var(--surface);border-radius:11px;padding:7px 11px;
+    font-size:13px;font-family:"Zen Kaku Gothic New";color:var(--ink);width:108px;text-align:right}
+  .namefield::placeholder{color:#BFB6A8}
+  .icon-btn{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;width:34px;height:34px;
+    cursor:pointer;font-size:14px;color:var(--ink-soft);display:none;place-items:center}
+  .icon-btn.show{display:grid}
+  .icon-btn:hover{border-color:#C0594B;color:#C0594B}
+
+  /* child tabs */
+  .kids{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none}
+  .kids::-webkit-scrollbar{display:none}
+  .kid{flex:0 0 auto;border:1.5px solid var(--line);background:var(--surface);border-radius:99px;
+    padding:8px 15px;font-size:13px;font-family:"Zen Maru Gothic";font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:all .15s}
+  .kid.on{background:var(--green);border-color:var(--green);color:#fff}
+  .kid.add{color:var(--green-deep);border-style:dashed}
+
+  .now-card{background:var(--surface);border:1.5px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+  .now-head{display:flex;justify-content:space-between;align-items:flex-start}
+  .now-label{font-family:"Zen Maru Gothic";font-weight:700;font-size:12px;color:var(--ink-soft);letter-spacing:.06em}
+  .now-temp{display:flex;align-items:baseline;gap:4px;margin-top:4px}
+  .now-temp b{font-family:"Zen Maru Gothic";font-weight:900;font-size:48px;line-height:1;color:var(--ink)}
+  .now-temp .u{font-family:"Zen Maru Gothic";font-weight:700;font-size:18px;color:var(--ink-soft)}
+  .now-temp.empty b{font-size:22px;color:var(--ink-soft);font-weight:700}
+  .now-time{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .mini-stats{display:flex;gap:18px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .mini-stats div{font-size:11px;color:var(--ink-soft)}
+  .mini-stats b{display:block;font-family:"Zen Maru Gothic";font-weight:700;font-size:16px;color:var(--green-deep);margin-top:2px}
+
+  .day{margin-top:22px}
+  .day-h{display:flex;align-items:center;gap:10px;margin:0 4px 10px}
+  .day-h .d{font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;color:var(--ink)}
+  .day-h .w{font-size:11px;color:#fff;background:var(--green);border-radius:6px;padding:2px 7px;font-family:"Zen Maru Gothic"}
+  .day-h .hi{margin-left:auto;font-size:11px;color:var(--amber);font-family:"Zen Maru Gothic";font-weight:700}
+  .entry{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:9px;
+    display:flex;gap:13px;align-items:flex-start;cursor:pointer;transition:border-color .15s, transform .08s}
+  .entry:hover{border-color:var(--green)} .entry:active{transform:scale(.99)}
+  .entry .t{flex:0 0 auto;text-align:center;min-width:48px}
+  .entry .t .hm{font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;color:var(--ink-soft)}
+  .entry .t .tp{font-family:"Zen Maru Gothic";font-weight:900;font-size:20px;line-height:1.1;margin-top:3px}
+  .entry .t .tp.none{font-size:12px;color:#C7BEB0;font-weight:700}
+  .entry .body{flex:1;min-width:0}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip-tag{font-size:11.5px;background:var(--green-soft);color:var(--green-deep);border-radius:7px;padding:3px 8px;font-weight:500}
+  .chip-tag.med{background:var(--amber-soft);color:var(--amber-deep)}
+  .chip-tag.warn{background:#FBE5DF;color:#C0594B}
+  .chip-tag.water{background:#E4F0F4;color:#3C7E94}
+  .entry .memo{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.6;word-break:break-word}
+  .temp-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:1px;vertical-align:middle}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(transparent, var(--bg) 26%);display:flex;justify-content:center}
+  .bar .inner{width:100%;max-width:460px;display:flex;gap:10px}
+  .btn{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:"Zen Maru Gothic";font-weight:700;
+    border-radius:15px;transition:transform .12s, background .2s, box-shadow .2s;font-size:16px}
+  .btn:active{transform:translateY(2px)}
+  .btn.add{flex:1;background:var(--green);color:#fff;padding:16px;box-shadow:0 9px 20px -9px var(--green-deep)}
+  .btn.add:hover{background:var(--green-deep)}
+  .btn.sum{flex:0 0 auto;background:var(--surface);color:var(--green-deep);border:1.5px solid var(--line);padding:16px 18px}
+  .btn.sum:hover{border-color:var(--green)}
+
+  .disclaimer{margin-top:24px;background:#FFF;border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+    font-size:11.5px;line-height:1.75;color:var(--ink-soft)}
+  .disclaimer b{color:var(--ink)} .disclaimer a{color:var(--green-deep);font-weight:700;text-decoration:none}
+
+  .scrim{position:fixed;inset:0;background:rgba(54,48,43,.42);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bg);border-radius:26px 26px 0 0;
+    padding:8px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:460px;margin:0 auto;max-height:94dvh;overflow-y:auto}
+  .sheet.on{transform:translateY(0)}
+  .grab{width:42px;height:5px;border-radius:99px;background:var(--line);margin:8px auto 12px}
+  .sheet h2{font-family:"Zen Maru Gothic";font-weight:700;font-size:18px;margin:0 0 16px;text-align:center}
+  .fld{margin-bottom:15px}
+  .fld>label{display:block;font-size:12px;font-family:"Zen Maru Gothic";font-weight:700;color:var(--ink-soft);margin-bottom:7px;letter-spacing:.04em}
+
+  /* temp picker */
+  .picker{position:relative;height:184px;overflow:hidden;border:1.5px solid var(--line);border-radius:16px;background:var(--surface)}
+  .pick-band{position:absolute;left:10px;right:10px;top:50%;height:46px;transform:translateY(-50%);z-index:0;
+    background:var(--green-soft);border-top:1.5px solid var(--green);border-bottom:1.5px solid var(--green);border-radius:10px;pointer-events:none}
+  .pick-scroll{position:relative;z-index:1;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center;-webkit-overflow-scrolling:touch}
+  .pick-unit{position:absolute;z-index:2;top:50%;left:calc(50% + 38px);transform:translateY(-50%);font-family:"Zen Maru Gothic";font-weight:700;color:var(--green-deep);font-size:15px;pointer-events:none}
+  .pick-scroll::-webkit-scrollbar{display:none}
+  .pick-item{height:46px;line-height:46px;scroll-snap-align:center;font-family:"Zen Maru Gothic";font-weight:700;font-size:21px;color:#CDC4B6;transition:color .12s,font-size .12s}
+  .pick-item.sel{color:var(--ink);font-size:27px}
+
+  .seg{display:flex;gap:8px}
+  .seg .s{flex:1;text-align:center;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;
+    padding:11px 4px;font-size:13.5px;cursor:pointer;font-family:"Zen Kaku Gothic New";color:var(--ink);transition:all .12s;user-select:none}
+  .seg .s.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+  .seg .s.on.warn{background:#C0594B;border-color:#C0594B}
+
+  .stepper{display:flex;align-items:center;gap:14px}
+  .stepper button{width:46px;height:46px;border-radius:13px;border:1.5px solid var(--line);background:var(--surface);
+    font-size:22px;font-family:"Zen Maru Gothic";color:var(--green-deep);cursor:pointer}
+  .stepper button:active{transform:scale(.94)}
+  .stepper .val{font-family:"Zen Maru Gothic";font-weight:900;font-size:24px;min-width:54px;text-align:center}
+  .stepper .val small{font-size:13px;color:var(--ink-soft);font-weight:700;margin-left:2px}
+
+  .sympt{display:flex;flex-wrap:wrap;gap:8px}
+  .sc{border:1.5px solid var(--line);background:var(--surface);border-radius:11px;padding:9px 13px;font-size:13.5px;
+    cursor:pointer;font-family:"Zen Kaku Gothic New";color:var(--ink);transition:all .12s;user-select:none}
+  .sc.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+  input.med,textarea{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:13px;padding:13px;
+    font-size:15px;font-family:"Zen Kaku Gothic New";color:var(--ink)}
+  input:focus,textarea:focus{outline:none;border-color:var(--green)} textarea{resize:none;min-height:56px;line-height:1.6}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px}
+  .btn.save{flex:1;background:var(--green);color:#fff;padding:15px} .btn.save:hover{background:var(--green-deep)}
+  .btn.del{flex:0 0 auto;background:transparent;color:#C0594B;border:1.5px solid var(--line);padding:15px 18px}
+  .btn.del:hover{border-color:#C0594B}
+
+  .sumwrap{display:none} .sumwrap.on{display:block}
+  .sum-top{display:flex;align-items:center;gap:10px;margin:6px 2px 14px}
+  .back{background:var(--surface);border:1.5px solid var(--line);border-radius:11px;padding:9px 13px;font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}
+  .sum-actions{display:flex;gap:8px;margin-left:auto}
+  .sum-actions .btn{font-size:13px;padding:9px 14px;border-radius:11px}
+  .btn.copy{background:var(--green);color:#fff} .btn.print{background:var(--surface);color:var(--green-deep);border:1.5px solid var(--line)}
+  .ai-trigger{margin:0 0 12px}
+  .btn.ai{width:100%;background:#fff;border:1.5px dashed var(--green);color:var(--green-deep);padding:14px;font-size:15px}
+  .btn.ai:hover{background:var(--green-soft)} .btn.ai:disabled{opacity:.6;cursor:default}
+  .print-area{background:var(--surface);border:1.5px solid var(--line);border-radius:20px;padding:24px 22px;box-shadow:var(--shadow)}
+  .ai-result{background:var(--green-soft);border-radius:14px;padding:16px 16px 13px;margin-bottom:20px}
+  .ai-label{font-family:"Zen Maru Gothic";font-weight:700;font-size:12px;color:var(--green-deep);margin-bottom:7px;letter-spacing:.03em}
+  .ai-result p{margin:0;font-size:14px;line-height:1.85;color:var(--ink)}
+  .ai-note{font-size:10.5px;color:var(--ink-soft);margin-top:9px}
+  .pa-title{font-family:"Zen Maru Gothic";font-weight:900;font-size:18px;margin:0}
+  .pa-range{font-size:12px;color:var(--ink-soft);margin:4px 0 18px}
+  .pa-day{margin-bottom:15px}
+  .pa-day h4{font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;margin:0 0 7px;padding-bottom:5px;border-bottom:1.5px solid var(--line-soft)}
+  .pa-line{display:flex;gap:10px;font-size:13.5px;padding:4px 0;line-height:1.6}
+  .pa-line .pt{flex:0 0 auto;min-width:44px;color:var(--ink-soft);font-family:"Zen Maru Gothic"}
+  .pa-line .pv b{font-family:"Zen Maru Gothic";font-weight:700}
+  .pa-sym{color:var(--ink-soft)}
+  .pa-tally{font-size:12px;color:var(--green-deep);margin-top:6px;font-family:"Zen Maru Gothic";font-weight:700}
+
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:11px 20px;border-radius:99px;font-size:13px;font-family:"Zen Maru Gothic";font-weight:700;opacity:0;pointer-events:none;transition:all .25s;z-index:60}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media print{
+    body{padding:0;background:#fff}
+    .no-print,.bar,header.top,.kids,.disclaimer{display:none!important}
+    .print-area{border:0;box-shadow:none;border-radius:0;padding:0}
+    .sumwrap{display:block!important} #main{display:none!important}
+    .ai-result{background:#f2f2f2}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="logo"><span class="leaf">🌱</span><span>こどもの熱メモ</span></div>
+    <div class="name-wrap">
+      <input class="namefield" id="childName" placeholder="お名前(任意)" maxlength="10" />
+      <button class="icon-btn" id="delKid" title="このお子さんを削除">🗑</button>
+    </div>
+  </header>
+
+  <div class="kids" id="kids"></div>
+
+  <div id="main">
+    <div class="now-card" id="nowCard"></div>
+    <div id="timeline"></div>
+    <div class="disclaimer">
+      <b>これは記録用のメモです。</b>診断や受診の判断はできません。いつもと様子が違う・ぐったりしている・水分やおしっこが減っているときは早めに医療機関へ。迷うときは小児救急電話相談 <a href="tel:#8000">＃8000</a> へ。
+    </div>
+  </div>
+
+  <div class="sumwrap" id="sumwrap">
+    <div class="sum-top no-print">
+      <button class="back" id="backBtn">← もどる</button>
+      <div class="sum-actions">
+        <button class="btn copy" id="copyBtn">コピー</button>
+        <button class="btn print" id="printBtn">印刷 / PDF</button>
+      </div>
+    </div>
+    <div class="ai-trigger no-print">
+      <button class="btn ai" id="aiBtn">🤖 AIで経過をまとめる</button>
+    </div>
+    <div class="print-area" id="printArea"></div>
+  </div>
+
+</div>
+
+<div class="bar no-print" id="bar">
+  <div class="inner">
+    <button class="btn add" id="addBtn">＋ 記録する</button>
+    <button class="btn sum" id="sumBtn">受診用にまとめる</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <h2 id="sheetTitle">記録する</h2>
+
+  <div class="fld">
+    <label>日時</label>
+    <input type="datetime-local" id="fDt" style="width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:13px;padding:13px;font-size:15px;font-family:'Zen Kaku Gothic New';color:var(--ink)" />
+  </div>
+
+  <div class="fld">
+    <label>体温（上下にスクロールで選択）</label>
+    <div class="picker">
+      <div class="pick-band"></div>
+      <div class="pick-unit">℃</div>
+      <div class="pick-scroll" id="pickScroll"></div>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>水分（任意）</label>
+    <div class="seg" id="fWater">
+      <div class="s" data-w="ok">とれている</div>
+      <div class="s" data-w="low">少し</div>
+      <div class="s" data-w="none">とれない</div>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>おしっこ（このとき／前回からの回数）</label>
+    <div class="stepper">
+      <button id="peeMinus">−</button>
+      <div class="val"><span id="peeVal">0</span><small>回</small></div>
+      <button id="peePlus">＋</button>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>気になる様子（タップで複数OK）</label>
+    <div class="sympt" id="fSympt"></div>
+  </div>
+
+  <div class="fld">
+    <label>のんだ薬（任意）</label>
+    <input class="med" id="fMed" placeholder="例：解熱剤 カロナール" maxlength="40" />
+  </div>
+
+  <div class="fld">
+    <label>メモ（任意）</label>
+    <textarea id="fMemo" placeholder="食欲・機嫌など" maxlength="140"></textarea>
+  </div>
+
+  <div class="sheet-actions">
+    <button class="btn del" id="delBtn" style="display:none">削除</button>
+    <button class="btn save" id="saveBtn">保存する</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   デプロイ設定 ── AI経過サマリーを使うときはここを変える
+   本番(GitHub Pages + Cloudflare Worker)では下のURLを
+   自分のWorkerに差し替える。Worker側でanthropic-versionヘッダと
+   env.ANTHROPIC_API_KEYを付与する想定（既存ツールと同じ）。
+   ※AIを使わなくても、記録・受診まとめ・印刷は全部オフラインで動きます。
+   ========================================================= */
+const API_ENDPOINT = "https://netsu-ai.clione-sippo.workers.dev";
+const MODEL = "claude-sonnet-4-6";
+
+/* ---------- storage（端末保存。使えない環境はメモリにフォールバック） ---------- */
+const Store = (()=>{
+  const KEY="netsu_memo_v2"; let mem=null, ok=false;
+  try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); ok=true; }catch(e){ ok=false; }
+  return {
+    raw(){ if(ok){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } } return mem; },
+    rawOld(){ if(ok){ try{ return JSON.parse(localStorage.getItem("netsu_memo_v1")); }catch(e){ return null; } } return null; },
+    save(d){ mem=d; if(ok){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} } }
+  };
+})();
+
+function newId(p){ return (p||"e")+Date.now()+Math.random().toString(36).slice(2,5); }
+function freshData(){ const id=newId("c"); return { children:[{id, name:"", entries:[]}], activeId:id }; }
+function loadData(){
+  let d = Store.raw();
+  if(!d){
+    const old = Store.rawOld(); // v1からの移行
+    if(old && old.entries){ const id=newId("c"); d={ children:[{id, name:old.name||"", entries:old.entries}], activeId:id }; }
+  }
+  if(!d || !d.children || !d.children.length) d = freshData();
+  if(!d.activeId || !d.children.find(c=>c.id===d.activeId)) d.activeId=d.children[0].id;
+  return d;
+}
+
+const SYMPTOMS=["食欲ない","咳","鼻水","のど痛い","嘔吐","下痢","発疹","ぐったり","きげん悪い","寒気・ふるえ","元気はある"];
+const WD=["日","月","火","水","木","金","土"];
+const $=id=>document.getElementById(id);
+
+let data=loadData();
+let editingId=null, selSym=[], selWater=null, peeCount=0;
+let aiCache={}; // childId -> summary text (セッション内)
+
+function child(){ return data.children.find(c=>c.id===data.activeId); }
+function entries(){ return child().entries; }
+function persist(){ Store.save(data); }
+
+/* ---------- helpers ---------- */
+function pad(n){ return String(n).padStart(2,"0"); }
+function nowLocalValue(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
+function fmtTime(iso){ const d=new Date(iso); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+function dayKey(iso){ const d=new Date(iso); return d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate()); }
+function fmtDay(k){ const [y,m,dd]=k.split("/"); return `${+m}/${+dd}`; }
+function weekday(k){ const [y,m,dd]=k.split("/"); return WD[new Date(+y,+m-1,+dd).getDay()]; }
+function waterLabel(w){ return w==="ok"?"とれている":w==="low"?"少し":w==="none"?"とれない":""; }
+function tempColor(t){ if(t==null||isNaN(t))return"transparent"; if(t<37.5)return"#7FB4A0"; if(t<38)return"#E5C26A"; if(t<38.5)return"#E29A55"; if(t<39)return"#DD7E4E"; return"#CF5F45"; }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---------- temp picker ---------- */
+const TEMP_VALUES=["なし"]; for(let v=350; v<=420; v++) TEMP_VALUES.push((v/10).toFixed(1));
+const ITEMH=46, PICKH=184, PADV=(PICKH-ITEMH)/2;
+function buildPicker(){
+  const s=$("pickScroll");
+  s.innerHTML = `<div style="height:${PADV}px"></div>`+
+    TEMP_VALUES.map((v,i)=>`<div class="pick-item" data-i="${i}">${v==="なし"?"—":v}</div>`).join("")+
+    `<div style="height:${PADV}px"></div>`;
+  s.addEventListener("scroll",()=>{ clearTimeout(s._t); s._t=setTimeout(updatePickSel,70); });
+  s.querySelectorAll(".pick-item").forEach(el=>{ el.onclick=()=>$("pickScroll").scrollTo({top:(+el.dataset.i)*ITEMH,behavior:"smooth"}); });
+}
+function pickIndex(){ return Math.max(0,Math.min(TEMP_VALUES.length-1,Math.round($("pickScroll").scrollTop/ITEMH))); }
+function updatePickSel(){ const idx=pickIndex(); $("pickScroll").querySelectorAll(".pick-item").forEach(el=>el.classList.toggle("sel",+el.dataset.i===idx)); }
+function pickedTemp(){ const v=TEMP_VALUES[pickIndex()]; return v==="なし"?null:v; }
+function setPicker(t){
+  let i;
+  if(t!=null && t!==""){ const f=(+t).toFixed(1); i=TEMP_VALUES.indexOf(f); if(i<0)i=TEMP_VALUES.indexOf("37.5"); }
+  else i=TEMP_VALUES.indexOf("37.5");
+  $("pickScroll").scrollTop=i*ITEMH; updatePickSel();
+}
+
+/* ---------- child tabs ---------- */
+function renderKids(){
+  const wrap=$("kids");
+  wrap.innerHTML = data.children.map(c=>`<div class="kid ${c.id===data.activeId?'on':''}" data-id="${c.id}">${c.name?esc(c.name):"お子さん"}</div>`).join("")
+    + `<div class="kid add" id="addKid">＋ 追加</div>`;
+  wrap.querySelectorAll(".kid[data-id]").forEach(el=>{ el.onclick=()=>{ data.activeId=el.dataset.id; afterChildChange(); }; });
+  $("addKid").onclick=()=>{ const id=newId("c"); data.children.push({id,name:"",entries:[]}); data.activeId=id; afterChildChange(); $("childName").focus(); };
+  $("delKid").classList.toggle("show", data.children.length>1);
+}
+function afterChildChange(){
+  $("childName").value=child().name||"";
+  persist(); renderKids(); render(); hideSummary();
+}
+
+/* ---------- main render ---------- */
+function render(){
+  entries().sort((a,b)=> new Date(a.dt)-new Date(b.dt));
+  renderNow(); renderTimeline(); persist();
+}
+function renderNow(){
+  const c=$("nowCard"), es=entries();
+  if(!es.length){ c.innerHTML=`<div class="now-label">まだ記録がありません</div><div class="now-temp empty"><b>下の「＋ 記録する」から</b></div><div class="now-time">最初の体温をメモしてみましょう</div>`; return; }
+  const withT=es.filter(e=>e.temp!=null&&e.temp!=="");
+  const last=es[es.length-1], lastT=withT.length?withT[withT.length-1]:null;
+  let hi="—",lo="—"; if(withT.length){ const v=withT.map(e=>+e.temp); hi=Math.max(...v).toFixed(1)+"℃"; lo=Math.min(...v).toFixed(1)+"℃"; }
+  c.innerHTML=`<div class="now-head"><div>
+      <div class="now-label">いまの体温</div>
+      ${lastT?`<div class="now-temp"><b>${(+lastT.temp).toFixed(1)}</b><span class="u">℃</span></div><div class="now-time">${dayKey(lastT.dt).slice(5)} ${fmtTime(lastT.dt)} 時点</div>`
+             :`<div class="now-temp empty"><b>体温の記録なし</b></div><div class="now-time">最後の記録：${fmtTime(last.dt)}</div>`}
+    </div><div>${sparkline(withT.slice(-8))}</div></div>
+    <div class="mini-stats"><div>最高<b>${hi}</b></div><div>最低<b>${lo}</b></div><div>記録数<b>${es.length}</b></div></div>`;
+}
+function sparkline(es){
+  if(es.length<2) return "";
+  const w=104,h=42,p=6,vals=es.map(e=>+e.temp),min=Math.min(...vals)-.2,max=Math.max(...vals)+.2,span=(max-min)||1;
+  const pts=vals.map((v,i)=>[p+i*(w-2*p)/(vals.length-1), h-p-((v-min)/span)*(h-2*p)]);
+  const d=pts.map((pt,i)=>(i?"L":"M")+pt[0].toFixed(1)+" "+pt[1].toFixed(1)).join(" ");
+  const dots=pts.map((pt,i)=>`<circle cx="${pt[0].toFixed(1)}" cy="${pt[1].toFixed(1)}" r="${i===pts.length-1?3.2:2}" fill="${tempColor(vals[i])}"/>`).join("");
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="#CFE0D5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</svg>`;
+}
+function renderTimeline(){
+  const tl=$("timeline"), es=entries(); if(!es.length){ tl.innerHTML=""; return; }
+  const g={}; es.forEach(e=>{ (g[dayKey(e.dt)] ||= []).push(e); });
+  tl.innerHTML=Object.keys(g).sort((a,b)=>b.localeCompare(a)).map(k=>{
+    const items=g[k].slice().sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+    const temps=items.filter(e=>e.temp!=null&&e.temp!=="").map(e=>+e.temp);
+    const hi=temps.length?`最高 ${Math.max(...temps).toFixed(1)}℃`:"";
+    return `<div class="day"><div class="day-h"><span class="d">${fmtDay(k)}</span><span class="w">${weekday(k)}</span><span class="hi">${hi}</span></div>${items.map(rowHTML).join("")}</div>`;
+  }).join("");
+  tl.querySelectorAll("[data-id]").forEach(el=>el.onclick=()=>openSheet(el.dataset.id));
+}
+function rowHTML(e){
+  const hasT=e.temp!=null&&e.temp!=="";
+  const parts=[];
+  (e.symptoms||[]).forEach(s=>parts.push(`<span class="chip-tag ${s==='ぐったり'?'warn':''}">${s}</span>`));
+  if(e.water) parts.push(`<span class="chip-tag ${e.water==='none'?'warn':'water'}">💧${waterLabel(e.water)}</span>`);
+  if(e.pee) parts.push(`<span class="chip-tag water">🚻${e.pee}回</span>`);
+  if(e.meds) parts.push(`<span class="chip-tag med">💊${esc(e.meds)}</span>`);
+  const memo=e.memo?`<div class="memo">${esc(e.memo)}</div>`:"";
+  return `<div class="entry" data-id="${e.id}"><div class="t"><div class="hm">${fmtTime(e.dt)}</div>
+    <div class="tp ${hasT?'':'none'}" style="${hasT?`color:${tempColor(+e.temp)}`:''}">${hasT?`<span class="temp-dot" style="background:${tempColor(+e.temp)}"></span>${(+e.temp).toFixed(1)}`:'—'}</div></div>
+    <div class="body">${parts.length?`<div class="chips">${parts.join("")}</div>`:'<div class="memo" style="margin-top:2px;color:#C7BEB0">体温のみ記録</div>'}${memo}</div></div>`;
+}
+
+/* ---------- sheet ---------- */
+function buildSymptoms(){
+  $("fSympt").innerHTML=SYMPTOMS.map(s=>`<div class="sc" data-s="${s}">${s}</div>`).join("");
+  $("fSympt").querySelectorAll(".sc").forEach(el=>el.onclick=()=>{
+    const s=el.dataset.s;
+    if(selSym.includes(s)){ selSym=selSym.filter(x=>x!==s); el.classList.remove("on"); } else { selSym.push(s); el.classList.add("on"); }
+  });
+}
+function bindWater(){
+  $("fWater").querySelectorAll(".s").forEach(el=>el.onclick=()=>{
+    const w=el.dataset.w;
+    if(selWater===w){ selWater=null; el.classList.remove("on","warn"); }
+    else{ selWater=w; $("fWater").querySelectorAll(".s").forEach(x=>x.classList.remove("on","warn")); el.classList.add("on"); if(w==="none")el.classList.add("warn"); }
+  });
+}
+function setPee(n){ peeCount=Math.max(0,Math.min(9,n)); $("peeVal").textContent=peeCount; }
+
+function openSheet(id){
+  editingId=id||null; selSym=[]; selWater=null;
+  $("fSympt").querySelectorAll(".sc").forEach(el=>el.classList.remove("on"));
+  $("fWater").querySelectorAll(".s").forEach(el=>el.classList.remove("on","warn"));
+  if(id){
+    const e=entries().find(x=>x.id===id);
+    $("sheetTitle").textContent="記録を編集";
+    $("fDt").value=e.dt.slice(0,16);
+    $("fMed").value=e.meds||""; $("fMemo").value=e.memo||"";
+    selSym=[...(e.symptoms||[])];
+    selSym.forEach(s=>{ const el=$("fSympt").querySelector(`[data-s="${CSS.escape(s)}"]`); if(el)el.classList.add("on"); });
+    selWater=e.water||null;
+    if(selWater){ const el=$("fWater").querySelector(`[data-w="${selWater}"]`); if(el){ el.classList.add("on"); if(selWater==="none")el.classList.add("warn"); } }
+    setPee(e.pee||0);
+    $("delBtn").style.display="block";
+    $("scrim").classList.add("on"); $("sheet").classList.add("on");
+    requestAnimationFrame(()=>setPicker(e.temp));
+  }else{
+    $("sheetTitle").textContent="記録する";
+    $("fDt").value=nowLocalValue(); $("fMed").value=""; $("fMemo").value=""; setPee(0);
+    $("delBtn").style.display="none";
+    $("scrim").classList.add("on"); $("sheet").classList.add("on");
+    requestAnimationFrame(()=>setPicker(null));
+  }
+}
+function closeSheet(){ $("scrim").classList.remove("on"); $("sheet").classList.remove("on"); }
+
+function saveEntry(){
+  const dt=$("fDt").value||nowLocalValue();
+  const temp=pickedTemp();
+  const entry={ dt:new Date(dt).toISOString(), temp, symptoms:[...selSym], water:selWater, pee:peeCount, meds:$("fMed").value.trim(), memo:$("fMemo").value.trim() };
+  if(temp==null && !entry.symptoms.length && !entry.water && !entry.pee && !entry.meds && !entry.memo){ toast("体温か様子を入れてね"); return; }
+  if(editingId){ Object.assign(entries().find(x=>x.id===editingId), entry); }
+  else{ entry.id=newId("e"); entries().push(entry); }
+  delete aiCache[data.activeId];
+  closeSheet(); render(); toast(editingId?"更新しました":"記録しました");
+}
+function delEntry(){
+  if(!editingId)return;
+  child().entries=entries().filter(x=>x.id!==editingId);
+  delete aiCache[data.activeId];
+  closeSheet(); render(); toast("削除しました");
+}
+function delChild(){
+  if(data.children.length<=1)return;
+  if(!confirm(`「${child().name||"お子さん"}」の記録を削除しますか？`))return;
+  data.children=data.children.filter(c=>c.id!==data.activeId);
+  data.activeId=data.children[0].id;
+  afterChildChange(); toast("削除しました");
+}
+
+/* ---------- summary ---------- */
+function dayTally(items){
+  const pee=items.reduce((s,e)=>s+(e.pee||0),0);
+  const waters=items.filter(e=>e.water).map(e=>waterLabel(e.water));
+  const bits=[];
+  if(waters.length) bits.push("水分 "+waters.join("→"));
+  if(pee) bits.push("おしっこ 計"+pee+"回");
+  return bits.join("　／　");
+}
+function buildSummary(){
+  const es=entries().slice().sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+  if(!es.length){ toast("まだ記録がありません"); return false; }
+  const name=(child().name||"").trim();
+  const first=dayKey(es[0].dt), last=dayKey(es[es.length-1].dt);
+  const range=first===last?fmtDay(first):`${fmtDay(first)}〜${fmtDay(last)}`;
+  const g={}; es.forEach(e=>{ (g[dayKey(e.dt)] ||= []).push(e); });
+
+  let html="";
+  if(aiCache[data.activeId]){
+    html += `<div class="ai-result"><div class="ai-label">🤖 AIによる経過まとめ（下書き・要確認）</div><p>${esc(aiCache[data.activeId])}</p><div class="ai-note">※記録をAIが文章化したものです。事実を確認のうえご利用ください。</div></div>`;
+  }
+  html += `<h3 class="pa-title">${name?esc(name)+'の':''}発熱の経過メモ</h3><div class="pa-range">${range}　／　記録 ${es.length}件</div>`;
+  Object.keys(g).sort().forEach(k=>{
+    html+=`<div class="pa-day"><h4>${fmtDay(k)}（${weekday(k)}）</h4>`;
+    g[k].forEach(e=>{
+      const t=(e.temp!=null&&e.temp!=="")?`<b>${(+e.temp).toFixed(1)}℃</b>`:`<span class="pa-sym">体温なし</span>`;
+      const ex=[]; if(e.symptoms&&e.symptoms.length)ex.push(e.symptoms.join("・"));
+      if(e.water)ex.push("水分:"+waterLabel(e.water)); if(e.pee)ex.push("おしっこ"+e.pee+"回");
+      if(e.meds)ex.push("薬:"+e.meds); if(e.memo)ex.push(e.memo);
+      html+=`<div class="pa-line"><span class="pt">${fmtTime(e.dt)}</span><span class="pv">${t}${ex.length?`　<span class="pa-sym">${esc(ex.join(" / "))}</span>`:""}</span></div>`;
+    });
+    const tal=dayTally(g[k]); if(tal) html+=`<div class="pa-tally">${esc(tal)}</div>`;
+    html+=`</div>`;
+  });
+  $("printArea").innerHTML=html;
+  return true;
+}
+function summaryText(includeAI){
+  const es=entries().slice().sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+  const name=(child().name||"").trim();
+  const g={}; es.forEach(e=>{ (g[dayKey(e.dt)] ||= []).push(e); });
+  let out=`${name?name+'の':''}発熱の経過メモ\n`;
+  if(includeAI && aiCache[data.activeId]) out += `\n【AIまとめ(下書き)】\n${aiCache[data.activeId]}\n`;
+  Object.keys(g).sort().forEach(k=>{
+    out+=`\n■ ${fmtDay(k)}(${weekday(k)})\n`;
+    g[k].forEach(e=>{
+      const t=(e.temp!=null&&e.temp!=="")?`${(+e.temp).toFixed(1)}℃`:"体温なし";
+      const ex=[]; if(e.symptoms&&e.symptoms.length)ex.push(e.symptoms.join("・"));
+      if(e.water)ex.push("水分:"+waterLabel(e.water)); if(e.pee)ex.push("おしっこ"+e.pee+"回");
+      if(e.meds)ex.push("薬:"+e.meds); if(e.memo)ex.push(e.memo);
+      out+=`  ${fmtTime(e.dt)}  ${t}${ex.length?"  "+ex.join(" / "):""}\n`;
+    });
+    const tal=dayTally(g[k]); if(tal) out+=`  （${tal}）\n`;
+  });
+  return out;
+}
+function showSummary(){
+  if(!buildSummary())return;
+  $("aiBtn").textContent = aiCache[data.activeId] ? "🤖 AIまとめを作り直す" : "🤖 AIで経過をまとめる";
+  $("aiBtn").disabled=false;
+  $("main").style.display="none"; $("bar").style.display="none";
+  $("sumwrap").classList.add("on"); window.scrollTo({top:0});
+}
+function hideSummary(){ $("sumwrap").classList.remove("on"); $("main").style.display="block"; $("bar").style.display="flex"; }
+
+async function genAISummary(){
+  const es=entries();
+  if(!es.length){ toast("記録がありません"); return; }
+  $("aiBtn").disabled=true; $("aiBtn").textContent="まとめています…";
+  const log=summaryText(false);
+  const prompt=
+`あなたは小児科を受診する保護者の「経過メモ」を整える役です。下の記録"だけ"を使って、医師がひと目で経過を把握できる短い文章にしてください。
+
+# 厳守
+- 記録にない情報は足さない。推測しない。
+- 診断名・原因の推測・受診要否や緊急度の判断・対処やアドバイスは一切書かない。事実の整理のみ。
+- 体温の推移、随伴症状、水分・おしっこ、服薬を、時系列で2〜4文の自然な文章に。箇条書き・見出し・前置きなし、本文のみ。
+
+# 記録
+${log}`;
+  try{
+    const res=await fetch(API_ENDPOINT,{ method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ model:MODEL, max_tokens:1000, messages:[{role:"user",content:prompt}] }) });
+    if(!res.ok) throw new Error("status "+res.status);
+    const d=await res.json();
+    const text=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+    if(!text) throw new Error("empty");
+    aiCache[data.activeId]=text;
+    buildSummary();
+    $("aiBtn").disabled=false; $("aiBtn").textContent="🤖 AIまとめを作り直す";
+    toast("まとめを作成しました");
+  }catch(e){
+    $("aiBtn").disabled=false; $("aiBtn").textContent="🤖 AIで経過をまとめる";
+    toast("作成できませんでした。通信を確認してね");
+  }
+}
+
+/* ---------- misc ---------- */
+let toastTimer=null;
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("on"),1700); }
+async function copySummary(){
+  const text=summaryText(true);
+  try{ await navigator.clipboard.writeText(text); toast("コピーしました"); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("コピーしました"); }catch(_){ toast("コピーできませんでした"); } document.body.removeChild(ta); }
+}
+
+/* ---------- events ---------- */
+$("childName").value=child().name||"";
+$("childName").oninput=()=>{ child().name=$("childName").value; persist(); renderKids(); };
+$("delKid").onclick=delChild;
+$("addBtn").onclick=()=>openSheet(null);
+$("saveBtn").onclick=saveEntry;
+$("delBtn").onclick=delEntry;
+$("scrim").onclick=closeSheet;
+$("sumBtn").onclick=showSummary;
+$("backBtn").onclick=hideSummary;
+$("copyBtn").onclick=copySummary;
+$("printBtn").onclick=()=>window.print();
+$("aiBtn").onclick=genAISummary;
+$("peeMinus").onclick=()=>setPee(peeCount-1);
+$("peePlus").onclick=()=>setPee(peeCount+1);
+
+buildSymptoms(); bindWater(); buildPicker(); renderKids(); render();
+</script>
+</body>
+</html>
