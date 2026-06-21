@@ -164,6 +164,9 @@
   .toast.has-action{pointer-events:auto}
   .toast .undo{-webkit-appearance:none;appearance:none;border:0;background:transparent;color:#8FD0B4;
     font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;cursor:pointer;padding:2px 0;white-space:nowrap}
+  .btn-reset{-webkit-appearance:none;appearance:none;border:1.5px solid var(--line);background:var(--surface);
+    color:#B07A6E;font-family:"Zen Maru Gothic";font-weight:700;font-size:13px;padding:10px 20px;border-radius:12px;cursor:pointer;transition:all .15s}
+  .btn-reset:hover{border-color:#C0594B;color:#C0594B}
 
   @media print{
     body{padding:0;background:#fff}
@@ -191,6 +194,9 @@
   <div id="main">
     <div class="now-card" id="nowCard"></div>
     <div id="timeline"></div>
+    <div id="resetWrap" style="text-align:center;margin-top:18px;display:none">
+      <button class="btn-reset" id="resetBtn">🗑 今の記録をぜんぶ消す</button>
+    </div>
     <div class="disclaimer">
       <b>これは記録用のメモです。</b>診断や受診の判断はできません。いつもと様子が違う・ぐったりしている・水分やおしっこが減っているときは早めに医療機関へ。迷うときは小児救急電話相談 <a href="tel:#8000">＃8000</a> へ。
     </div>
@@ -375,7 +381,9 @@ function afterChildChange(){
 /* ---------- main render ---------- */
 function render(){
   entries().sort((a,b)=> new Date(a.dt)-new Date(b.dt));
-  renderNow(); renderTimeline(); persist();
+  renderNow(); renderTimeline();
+  $("resetWrap").style.display = entries().length ? "block" : "none";
+  persist();
 }
 function renderNow(){
   const c=$("nowCard"), es=entries();
@@ -475,6 +483,22 @@ function saveEntry(){
   else{ entry.id=newId("e"); entries().push(entry); }
   delete aiCache[data.activeId];
   closeSheet(); render(); toast(editingId?"更新しました":"記録しました");
+}
+function resetEntries(){
+  const cid=data.activeId;
+  const ch=data.children.find(c=>c.id===cid);
+  if(!ch.entries.length){ toast("記録がありません"); return; }
+  if(!confirm(`「${ch.name||"お子さん"}」の記録 ${ch.entries.length}件をすべて消しますか？\n（消したあと「元に戻す」で戻せます）`)) return;
+  const backup=JSON.parse(JSON.stringify(ch.entries));
+  const backupAi=aiCache[cid];
+  ch.entries=[]; delete aiCache[cid];
+  render();
+  toast(`${backup.length}件を消しました`,"↩︎ 元に戻す",()=>{
+    const c2=data.children.find(c=>c.id===cid); if(!c2)return;
+    c2.entries=backup; if(backupAi) aiCache[cid]=backupAi;
+    if(data.activeId!==cid){ data.activeId=cid; afterChildChange(); } else render();
+    toast("元に戻しました");
+  });
 }
 function delEntry(){
   if(!editingId)return;
@@ -641,6 +665,7 @@ $("printBtn").onclick=()=>window.print();
 $("aiBtn").onclick=genAISummary;
 $("peeMinus").onclick=()=>setPee(peeCount-1);
 $("peePlus").onclick=()=>setPee(peeCount+1);
+$("resetBtn").onclick=resetEntries;
 
 buildSymptoms(); bindWater(); buildPicker(); renderKids(); render();
 </script>
